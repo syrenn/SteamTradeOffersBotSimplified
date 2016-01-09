@@ -12,6 +12,8 @@ using SteamKit2.Internal;
 using SteamAuth;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
+using SteamAPI.TradeOffers;
+using SteamAPI.TradeOffers.Enums;
 
 namespace SteamBot
 {
@@ -672,18 +674,44 @@ namespace SteamBot
             cookiesAreInvalid = false;
 
             TradeOffers = new TradeOffers(SteamUser.SteamID, SteamWeb, ApiKey, TradeOfferRefreshRate);
+            TradeOffers.TradeOfferReceived += TradeOffers_TradeOfferReceived;
             TradeOffers.TradeOfferAccepted += TradeOffers_TradeOfferAccepted;
             TradeOffers.TradeOfferDeclined += TradeOffers_TradeOfferDeclined;
-            TradeOffers.TradeOfferReceived += TradeOffers_TradeOfferReceived;
+            TradeOffers.TradeOfferCanceled += TradeOffers_TradeOfferCanceled;            
             TradeOffers.TradeOfferInvalid += TradeOffers_TradeOfferInvalid;
             TradeOffers.TradeOfferNeedsConfirmation += TradeOffers_TradeOfferNeedsConfirmation;
 
             GetUserHandler(SteamClient.SteamID).OnLoginCompleted();
+        }       
+
+        private void TradeOffers_TradeOfferReceived(object sender, TradeOffers.TradeOfferEventArgs e)
+        {
+            GetUserHandler(e.TradeOffer.OtherSteamId).OnTradeOfferReceived(e.TradeOffer);
+        }
+
+        private void TradeOffers_TradeOfferAccepted(object sender, TradeOffers.TradeOfferEventArgs e)
+        {
+            GetUserHandler(e.TradeOffer.OtherSteamId).OnTradeOfferAccepted(e.TradeOffer);
+        }
+
+        private void TradeOffers_TradeOfferDeclined(object sender, TradeOffers.TradeOfferEventArgs e)
+        {
+            GetUserHandler(e.TradeOffer.OtherSteamId).OnTradeOfferDeclined(e.TradeOffer);
+        }
+
+        private void TradeOffers_TradeOfferCanceled(object sender, TradeOffers.TradeOfferEventArgs e)
+        {
+            GetUserHandler(e.TradeOffer.OtherSteamId).OnTradeOfferCanceled(e.TradeOffer);
+        }
+
+        private void TradeOffers_TradeOfferInvalid(object sender, TradeOffers.TradeOfferEventArgs e)
+        {
+            GetUserHandler(e.TradeOffer.OtherSteamId).OnTradeOfferInvalid(e.TradeOffer);
         }
 
         private void TradeOffers_TradeOfferNeedsConfirmation(object sender, TradeOffers.TradeOfferEventArgs e)
         {
-            if (e.TradeOffer.ConfirmationMethod == TradeOffers.TradeOfferConfirmationMethod.MobileApp)
+            if (e.TradeOffer.ConfirmationMethod == TradeOfferConfirmationMethod.MobileApp)
             {
                 if (SteamGuardAccount == null)
                 {
@@ -721,7 +749,7 @@ namespace SteamBot
                     }
                 }
             }
-            else if (e.TradeOffer.ConfirmationMethod == TradeOffers.TradeOfferConfirmationMethod.Email)
+            else if (e.TradeOffer.ConfirmationMethod == TradeOfferConfirmationMethod.Email)
             {
                 if (e.TradeOffer.IsOurOffer)
                 {
@@ -734,26 +762,6 @@ namespace SteamBot
                     Log.Error("Declining trade offer #{0} because it needs email confirmation.", e.TradeOffer.Id);
                 }
             }
-        }
-
-        private void TradeOffers_TradeOfferInvalid(object sender, TradeOffers.TradeOfferEventArgs e)
-        {
-            GetUserHandler(e.TradeOffer.OtherSteamId).OnTradeOfferInvalid(e.TradeOffer);
-        }
-
-        void TradeOffers_TradeOfferReceived(object sender, TradeOffers.TradeOfferEventArgs e)
-        {
-            GetUserHandler(e.TradeOffer.OtherSteamId).OnTradeOfferReceived(e.TradeOffer);
-        }
-
-        void TradeOffers_TradeOfferDeclined(object sender, TradeOffers.TradeOfferEventArgs e)
-        {
-            GetUserHandler(e.TradeOffer.OtherSteamId).OnTradeOfferDeclined(e.TradeOffer);
-        }
-
-        void TradeOffers_TradeOfferAccepted(object sender, TradeOffers.TradeOfferEventArgs e)
-        {
-            GetUserHandler(e.TradeOffer.OtherSteamId).OnTradeOfferAccepted(e.TradeOffer);
         }
 
         /// <summary>
@@ -852,8 +860,10 @@ namespace SteamBot
         {
             var url = "https://steamcommunity.com/tradeoffer/new/";
 
-            var data = new System.Collections.Specialized.NameValueCollection();
-            data.Add("partner", steamId.AccountID.ToString());
+            var data = new System.Collections.Specialized.NameValueCollection
+            {
+                {"partner", steamId.AccountID.ToString()}
+            };
             if (!string.IsNullOrEmpty(token))
             {
                 data.Add("token", token);
@@ -900,10 +910,7 @@ namespace SteamBot
                     var steamError = Regex.Replace(steamErrorM.Groups[1].Value.Trim(), @"\t|\n|\r", ""); ;
                     throw new TradeOfferEscrowDurationParseException(steamError);
                 }
-                else
-                {
-                    throw new TradeOfferEscrowDurationParseException(string.Empty);
-                }
+                throw new TradeOfferEscrowDurationParseException(string.Empty);
             }
 
             return new TradeOfferEscrowDuration()

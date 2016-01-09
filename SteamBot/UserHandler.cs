@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using SteamKit2;
 using SteamAPI;
+using SteamAPI.TradeOffers;
+using SteamAPI.TradeOffers.Objects;
 
 namespace SteamBot
 {
@@ -73,12 +75,13 @@ namespace SteamBot
         {
             return GenericInventory.FetchInventories(steamId, Bot.SteamClient.SteamID, Bot.SteamWeb);
         }
-        
-        public abstract void OnTradeOfferInvalid(TradeOffers.TradeOffer tradeOffer);
-        public abstract void OnTradeOfferReceived(TradeOffers.TradeOffer tradeOffer);
-        public abstract void OnTradeOfferAccepted(TradeOffers.TradeOffer tradeOffer);
-        public abstract void OnTradeOfferDeclined(TradeOffers.TradeOffer tradeOffer);        
-        public abstract void OnTradeOfferFailedConfirmation(TradeOffers.TradeOffer tradeOffer);
+                
+        public abstract void OnTradeOfferReceived(TradeOffer tradeOffer);
+        public abstract void OnTradeOfferAccepted(TradeOffer tradeOffer);
+        public abstract void OnTradeOfferDeclined(TradeOffer tradeOffer);
+        public abstract void OnTradeOfferCanceled(TradeOffer tradeOffer);
+        public abstract void OnTradeOfferFailedConfirmation(TradeOffer tradeOffer);
+        public abstract void OnTradeOfferInvalid(TradeOffer tradeOffer);
 
         /// <summary>
         /// Called when the bot is invited to a Steam group

@@ -59,7 +59,15 @@
     <Compile Include="Inventory\Inventory.cs" />
     <Compile Include="SteamWeb.cs" />
     <Compile Include="Inventory\TF2Inventory.cs" />
-    <Compile Include="TradeOffer.cs" />
+    <Compile Include="TradeOffers\Enums\TradeOfferConfirmationMethod.cs" />
+    <Compile Include="TradeOffers\Enums\TradeOfferState.cs" />
+    <Compile Include="TradeOffers\Objects\GetTradeOffer.cs" />
+    <Compile Include="TradeOffers\Objects\TradeHistory.cs" />
+    <Compile Include="TradeOffers\Objects\TradeOffer.cs" />
+    <Compile Include="TradeOffers\Objects\TradeOfferDescriptions.cs" />
+    <Compile Include="TradeOffers\Trade.cs" />
+    <Compile Include="TradeOffers\TradeOffers.cs" />
+    <Compile Include="TradeOffers\TradeOfferSteamException.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

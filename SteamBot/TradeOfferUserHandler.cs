@@ -1,8 +1,9 @@
 ﻿using SteamKit2;
-using SteamAPI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SteamAPI.TradeOffers;
+using SteamAPI.TradeOffers.Objects;
 
 namespace SteamBot
 {
@@ -10,19 +11,37 @@ namespace SteamBot
     {
         public TradeOfferUserHandler(Bot bot, SteamID sid) : base(bot, sid) { }
 
-        public override void OnTradeOfferReceived(TradeOffers.TradeOffer tradeOffer)
+        public override void OnTradeOfferReceived(TradeOffer tradeOffer)
         {
             if (IsAdmin)
             {
-                TradeOffers.AcceptTrade(tradeOffer.Id);
+                try
+                {
+                    // see documentation for more info on when TradeOfferSteamException is thrown
+                    TradeOffers.AcceptTrade(tradeOffer.Id);
+                }
+                catch (TradeOfferSteamException ex)
+                {
+                    if (ex.ErrorCode == 11 | ex.ErrorCode == 16)
+                    {
+                        // trade offer might have been accepted still
+                    }
+                }     
             }
             else
             {
-                TradeOffers.DeclineTrade(tradeOffer.Id);
+                try
+                {
+                    TradeOffers.DeclineTrade(tradeOffer.Id);
+                }
+                catch (TradeOfferSteamException ex)
+                {
+                    var tradeErrorCode = ex.ErrorCode; // you can do something with this if you want
+                }
             }
         }
 
-        public override void OnTradeOfferAccepted(TradeOffers.TradeOffer tradeOffer)
+        public override void OnTradeOfferAccepted(TradeOffer tradeOffer)
         {
             var tradeOfferId = tradeOffer.Id;
             var myItems = tradeOffer.ItemsToGive;
@@ -34,26 +53,45 @@ namespace SteamBot
             // userItems is now in bot inventory
         }
 
-        public override void OnTradeOfferDeclined(TradeOffers.TradeOffer tradeOffer)
+        public override void OnTradeOfferDeclined(TradeOffer tradeOffer)
         {
             Log.Warn("Trade offer #{0} has been declined.", tradeOffer.Id);
         }
 
-        public override void OnTradeOfferInvalid(TradeOffers.TradeOffer tradeOffer)
+        public override void OnTradeOfferCanceled(TradeOffer tradeOffer)
+        {
+            Log.Warn("Trade offer #{0} has been canceled by bot.", tradeOffer.Id);
+        }
+
+        public override void OnTradeOfferInvalid(TradeOffer tradeOffer)
         {
             Log.Warn("Trade offer #{0} is invalid, with state: {1}.", tradeOffer.Id, tradeOffer.State);
         }
 
-        public override void OnTradeOfferFailedConfirmation(TradeOffers.TradeOffer tradeOffer)
+        public override void OnTradeOfferFailedConfirmation(TradeOffer tradeOffer)
         {
             // confirmation failed, so cancel it just to be safe
             if (tradeOffer.IsOurOffer)
             {
-                TradeOffers.CancelTrade(tradeOffer);
+                try
+                {
+                    TradeOffers.CancelTrade(tradeOffer);
+                }
+                catch (TradeOfferSteamException ex)
+                {
+                    var tradeErrorCode = ex.ErrorCode; // you can do something with this if you want
+                }
             }
             else
             {
-                TradeOffers.DeclineTrade(tradeOffer);
+                try
+                {
+                    TradeOffers.DeclineTrade(tradeOffer);
+                }
+                catch (TradeOfferSteamException ex)
+                {
+                    var tradeErrorCode = ex.ErrorCode; // you can do something with this if you want
+                }
             }
             Log.Warn("Trade offer #{0} failed to confirm. Cancelled the trade.");
         }
@@ -76,15 +114,25 @@ namespace SteamBot
                         tradeOffer.AddMyItem(440, 2, item.Id);
                         break;
                     }
-                    var tradeOfferIdWithToken = tradeOffer.SendTradeWithToken("message", "");
-                    if (tradeOfferIdWithToken > 0)
+                    try
                     {
-                        Log.Success("Trade offer sent : Offer ID " + tradeOfferIdWithToken);
+                        var tradeOfferIdWithToken = tradeOffer.SendTradeWithToken("message", "");
+                        if (tradeOfferIdWithToken > 0)
+                        {
+                            Log.Success("Trade offer sent: Offer ID " + tradeOfferIdWithToken);
+                        }
                     }
+                    catch (TradeOfferSteamException ex)
+                    {
+                        if (ex.ErrorCode == 11 || ex.ErrorCode == 16)
+                        {
+                            // trade offer might have been sent even though there was an error
+                        }
+                    }                    
                 }
                 else
                 {
-                    //creating a new trade offer
+                    // EXAMPLE: creating a new trade offer
                     var tradeOffer = TradeOffers.CreateTrade(OtherSID);
 
                     //tradeOffer.AddMyItem(0, 0, 0);
@@ -94,13 +142,24 @@ namespace SteamBot
                     {
                         Log.Success("Trade offer sent : Offer ID " + tradeOfferId);
                     }
-
-                    // sending trade offer with token
-                    // "token" should be replaced with the actual token from the other user
-                    var tradeOfferIdWithToken = tradeOffer.SendTradeWithToken("message", "token");
-                    if (tradeOfferIdWithToken > 0)
+                    
+                    try
                     {
-                        Log.Success("Trade offer sent : Offer ID " + tradeOfferIdWithToken);
+                        // sending trade offer with token
+                        // "token" should be replaced with the actual token from the other user
+                        var tradeOfferIdWithToken = tradeOffer.SendTradeWithToken("message", "token");
+                        if (tradeOfferIdWithToken > 0)
+                        {
+                            Log.Success("Trade offer sent: Offer ID " + tradeOfferIdWithToken);
+                        }
+
+                    }
+                    catch (TradeOfferSteamException ex)
+                    {
+                        if (ex.ErrorCode == 11 || ex.ErrorCode == 16)
+                        {
+                            // trade offer might have been sent even though there was an error
+                        }
                     }
                 }                
             }
@@ -113,15 +172,5 @@ namespace SteamBot
         public override void OnFriendRemove() { }
 
         public override void OnLoginCompleted() { }
-
-        private bool DummyValidation(List<TradeOffers.TradeOffer.CEconAsset> myAssets, List<TradeOffers.TradeOffer.CEconAsset> theirAssets)
-        {
-            //compare items etc
-            if (myAssets.Count == theirAssets.Count)
-            {
-                return true;
-            }
-            return false;
-        }
     }
 }
