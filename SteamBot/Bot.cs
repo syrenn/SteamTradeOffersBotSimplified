@@ -674,15 +674,23 @@ namespace SteamBot
             cookiesAreInvalid = false;
 
             TradeOffers = new TradeOffers(SteamUser.SteamID, SteamWeb, ApiKey, TradeOfferRefreshRate);
+            TradeOffers.TradeOfferChecked += TradeOffers_TradeOfferChecked;
             TradeOffers.TradeOfferReceived += TradeOffers_TradeOfferReceived;
             TradeOffers.TradeOfferAccepted += TradeOffers_TradeOfferAccepted;
             TradeOffers.TradeOfferDeclined += TradeOffers_TradeOfferDeclined;
             TradeOffers.TradeOfferCanceled += TradeOffers_TradeOfferCanceled;            
             TradeOffers.TradeOfferInvalid += TradeOffers_TradeOfferInvalid;
             TradeOffers.TradeOfferNeedsConfirmation += TradeOffers_TradeOfferNeedsConfirmation;
+            TradeOffers.TradeOfferInEscrow += TradeOffers_TradeOfferInEscrow;
+            TradeOffers.TradeOfferNoData += TradeOffers_TradeOfferNoData;
 
             GetUserHandler(SteamClient.SteamID).OnLoginCompleted();
-        }       
+        }
+
+        private void TradeOffers_TradeOfferChecked(object sender, TradeOffers.TradeOfferEventArgs e)
+        {
+            GetUserHandler(e.TradeOffer.OtherSteamId).OnTradeOfferChecked(e.TradeOffer);
+        }
 
         private void TradeOffers_TradeOfferReceived(object sender, TradeOffers.TradeOfferEventArgs e)
         {
@@ -754,14 +762,24 @@ namespace SteamBot
                 if (e.TradeOffer.IsOurOffer)
                 {
                     TradeOffers.CancelTrade(e.TradeOffer);
-                    Log.Error("Cancelling our trade offer #{0} because it needs email confirmation.", e.TradeOffer.Id);
+                    Log.Error("Cancelling our trade offer #{0} because it needs email confirmation. You need to disable trade confirmations or use the bot as a mobile authenticator.", e.TradeOffer.Id);
                 }
                 else
                 {
                     TradeOffers.DeclineTrade(e.TradeOffer);
-                    Log.Error("Declining trade offer #{0} because it needs email confirmation.", e.TradeOffer.Id);
+                    Log.Error("Declining trade offer #{0} because it needs email confirmation. You need to disable trade confirmations or use the bot as a mobile authenticator.", e.TradeOffer.Id);
                 }
             }
+        }
+
+        private void TradeOffers_TradeOfferInEscrow(object sender, TradeOffers.TradeOfferEventArgs e)
+        {
+            GetUserHandler(e.TradeOffer.OtherSteamId).OnTradeOfferInEscrow(e.TradeOffer);
+        }
+
+        private void TradeOffers_TradeOfferNoData(object sender, TradeOffers.TradeOfferEventArgs e)
+        {
+            GetUserHandler(e.TradeOffer.OtherSteamId).OnTradeOfferNoData(e.TradeOffer);
         }
 
         /// <summary>

@@ -75,13 +75,16 @@ namespace SteamBot
         {
             return GenericInventory.FetchInventories(steamId, Bot.SteamClient.SteamID, Bot.SteamWeb);
         }
-                
+
+        public abstract void OnTradeOfferChecked(TradeOffer tradeOffer);
         public abstract void OnTradeOfferReceived(TradeOffer tradeOffer);
         public abstract void OnTradeOfferAccepted(TradeOffer tradeOffer);
         public abstract void OnTradeOfferDeclined(TradeOffer tradeOffer);
         public abstract void OnTradeOfferCanceled(TradeOffer tradeOffer);
-        public abstract void OnTradeOfferFailedConfirmation(TradeOffer tradeOffer);
         public abstract void OnTradeOfferInvalid(TradeOffer tradeOffer);
+        public abstract void OnTradeOfferInEscrow(TradeOffer tradeOffer);
+        public abstract void OnTradeOfferFailedConfirmation(TradeOffer tradeOffer);
+        public abstract void OnTradeOfferNoData(TradeOffer tradeOffer);
 
         /// <summary>
         /// Called when the bot is invited to a Steam group

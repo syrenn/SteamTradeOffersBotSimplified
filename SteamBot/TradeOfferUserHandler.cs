@@ -11,6 +11,12 @@ namespace SteamBot
     {
         public TradeOfferUserHandler(Bot bot, SteamID sid) : base(bot, sid) { }
 
+        public override void OnTradeOfferChecked(TradeOffer tradeOffer)
+        {
+            // polling has been completed once for our sent trade offer, and it is still active
+            // this will always be a trade offer from the bot
+        }
+
         public override void OnTradeOfferReceived(TradeOffer tradeOffer)
         {
             if (IsAdmin)
@@ -47,7 +53,7 @@ namespace SteamBot
             var myItems = tradeOffer.ItemsToGive;
             var userItems = tradeOffer.ItemsToReceive;
 
-            Log.Info("Trade offer #{0} accepted. Items to give: {1}, Items to receive: {2}", tradeOfferId, myItems.Length, userItems.Length);
+            Log.Info("Trade offer #{0} accepted. Items given: {1}, Items received: {2}", tradeOfferId, myItems.Length, userItems.Length);
 
             // myItems is now in user inventory
             // userItems is now in bot inventory
@@ -66,6 +72,11 @@ namespace SteamBot
         public override void OnTradeOfferInvalid(TradeOffer tradeOffer)
         {
             Log.Warn("Trade offer #{0} is invalid, with state: {1}.", tradeOffer.Id, tradeOffer.State);
+        }
+
+        public override void OnTradeOfferInEscrow(TradeOffer tradeOffer)
+        {
+            Log.Warn("Trade offer #{0} is in escrow until {2}.", tradeOffer.Id, tradeOffer.EscrowEndDate);
         }
 
         public override void OnTradeOfferFailedConfirmation(TradeOffer tradeOffer)
@@ -94,6 +105,16 @@ namespace SteamBot
                 }
             }
             Log.Warn("Trade offer #{0} failed to confirm. Cancelled the trade.");
+        }
+
+        public override void OnTradeOfferNoData(TradeOffer tradeOffer)
+        {
+            // Steam's GetTradeOffer/v1 API only gives data for the last 1000 received and 500 sent trade offers, so sometimes this will be called.
+            // The only property from this trade offer object you can access is its ID. It's up to you how you want to handle it.
+            // Trade offers in this state will be gone once the bot is restarted, so this will only be called once.
+            // If your bot is offline when Steam loses data about the trade offer, this will never be called.
+
+            Log.Warn("No data from Steam for trade offer #{0}!", tradeOffer.Id);
         }
 
         public override void OnMessage(string message, EChatEntryType type)
