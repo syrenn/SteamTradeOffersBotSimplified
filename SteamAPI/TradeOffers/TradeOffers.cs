@@ -16,6 +16,7 @@ namespace SteamAPI.TradeOffers
     {
         public List<ulong> OurPendingTradeOffers;
 
+        private readonly object _ourPendingTradeOffersLock;
         private readonly SteamID _botId;
         private readonly SteamWeb _steamWeb;        
         private readonly List<ulong> _handledTradeOffers;
@@ -35,6 +36,7 @@ namespace SteamAPI.TradeOffers
 
             OurPendingTradeOffers = pendingTradeOffers ?? new List<ulong>();
 
+            _ourPendingTradeOffersLock = new object();
             _handledTradeOffers = new List<ulong>();
             _awaitingConfirmationTradeOffers = new List<ulong>();
             _inEscrowTradeOffers = new List<ulong>();
@@ -371,11 +373,17 @@ namespace SteamAPI.TradeOffers
 
         public void AddPendingTradeOfferToList(ulong tradeOfferId)
         {
-            OurPendingTradeOffers.Add(tradeOfferId);
+            lock (_ourPendingTradeOffersLock)
+            {
+                OurPendingTradeOffers.Add(tradeOfferId);
+            }            
         }
         private void RemovePendingTradeOfferFromList(ulong tradeOfferId)
         {
-            OurPendingTradeOffers.Remove(tradeOfferId);
+            lock (_ourPendingTradeOffersLock)
+            {
+                OurPendingTradeOffers.Remove(tradeOfferId);
+            }            
         }
 
         public void StopCheckingPendingTradeOffers()
@@ -394,10 +402,11 @@ namespace SteamAPI.TradeOffers
                     {
                         if (tradeOffer.IsOurOffer)
                         {
-                            if (!OurPendingTradeOffers.Contains(tradeOffer.Id))
+                            lock (_ourPendingTradeOffersLock)
                             {
-                                OurPendingTradeOffers.Add(tradeOffer.Id);
+                                if (OurPendingTradeOffers.Contains(tradeOffer.Id)) continue;
                             }
+                            AddPendingTradeOfferToList(tradeOffer.Id);
                         }
                         else
                         {
@@ -421,13 +430,18 @@ namespace SteamAPI.TradeOffers
             while (_shouldCheckPendingTradeOffers)
             {
                 var checkingThreads = new List<Thread>();
-                foreach (var thread in OurPendingTradeOffers.ToList().Select(tradeOfferId => new Thread(() =>
+                List<ulong> ourPendingTradeOffers;
+                lock (_ourPendingTradeOffersLock)
+                {
+                    ourPendingTradeOffers = OurPendingTradeOffers.ToList();                    
+                }
+                foreach (var thread in ourPendingTradeOffers.Select(tradeOfferId => new Thread(() =>
                 {
                     var pendingTradeOffer = GetTradeOffer(tradeOfferId);
                     if (pendingTradeOffer.Offer == null)
                     {
                         // Steam's GetTradeOffer/v1 API only gives data for the last 1000 received and 500 sent trade offers, so sometimes this happens
-                        pendingTradeOffer.Offer = new TradeOffer {Id = tradeOfferId};
+                        pendingTradeOffer.Offer = new TradeOffer { Id = tradeOfferId };
                         OnTradeOfferNoData(new TradeOfferEventArgs(pendingTradeOffer.Offer));
                     }
                     else
@@ -446,7 +460,7 @@ namespace SteamAPI.TradeOffers
                                 // fire event                            
                                 OnTradeOfferAccepted(args);
                                 // remove from list
-                                OurPendingTradeOffers.Remove(pendingTradeOffer.Offer.Id);
+                                RemovePendingTradeOfferFromList(pendingTradeOffer.Offer.Id);
                             }
                             else
                             {
@@ -456,9 +470,9 @@ namespace SteamAPI.TradeOffers
                                     OnTradeOfferNeedsConfirmation(args);
                                 }
                                 else if (pendingTradeOffer.Offer.State == TradeOfferState.Invalid || pendingTradeOffer.Offer.State == TradeOfferState.InvalidItems)
-                                {                                    
+                                {
                                     OnTradeOfferInvalid(args);
-                                    OurPendingTradeOffers.Remove(pendingTradeOffer.Offer.Id);
+                                    RemovePendingTradeOfferFromList(pendingTradeOffer.Offer.Id);
                                 }
                                 else if (pendingTradeOffer.Offer.State == TradeOfferState.InEscrow)
                                 {
@@ -474,11 +488,11 @@ namespace SteamAPI.TradeOffers
                                     {
                                         OnTradeOfferDeclined(args);
                                     }
-                                    OurPendingTradeOffers.Remove(pendingTradeOffer.Offer.Id);
-                                }                             
+                                    RemovePendingTradeOfferFromList(pendingTradeOffer.Offer.Id);
+                                }
                             }
                         }
-                    }                                        
+                    }
                 })))
                 {
                     checkingThreads.Add(thread);
