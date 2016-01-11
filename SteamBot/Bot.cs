@@ -683,8 +683,6 @@ namespace SteamBot
             TradeOffers.TradeOfferNeedsConfirmation += TradeOffers_TradeOfferNeedsConfirmation;
             TradeOffers.TradeOfferInEscrow += TradeOffers_TradeOfferInEscrow;
             TradeOffers.TradeOfferNoData += TradeOffers_TradeOfferNoData;
-
-            GetUserHandler(SteamClient.SteamID).OnLoginCompleted();
         }
 
         private void TradeOffers_TradeOfferChecked(object sender, TradeOffers.TradeOfferEventArgs e)
