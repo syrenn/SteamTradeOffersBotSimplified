@@ -83,6 +83,7 @@ namespace SteamBot
         public abstract void OnTradeOfferCanceled(TradeOffer tradeOffer);
         public abstract void OnTradeOfferInvalid(TradeOffer tradeOffer);
         public abstract void OnTradeOfferInEscrow(TradeOffer tradeOffer);
+        public abstract void OnTradeOfferConfirmed(TradeOffer tradeOffer);
         public abstract void OnTradeOfferFailedConfirmation(TradeOffer tradeOffer);
         public abstract void OnTradeOfferNoData(TradeOffer tradeOffer);
 

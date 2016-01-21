@@ -83,6 +83,11 @@ namespace SteamBot
             Log.Warn("Trade offer #{0} is in escrow until {2}.", tradeOffer.Id, tradeOffer.EscrowEndDate);
         }
 
+        public override void OnTradeOfferConfirmed(TradeOffer tradeOffer)
+        {
+            Log.Success("Trade offer #{0} has been successfully confirmed.", tradeOffer.Id);
+        }
+
         public override void OnTradeOfferFailedConfirmation(TradeOffer tradeOffer)
         {
             // confirmation failed, so cancel it just to be safe

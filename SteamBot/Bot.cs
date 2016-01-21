@@ -727,10 +727,10 @@ namespace SteamBot
                 {
                     var confirmed = false;
                     // try to confirm up to 2 times, refreshing session after first failure
+                    SteamGuardAccount.Session.SteamLogin = SteamWeb.Token;
+                    SteamGuardAccount.Session.SteamLoginSecure = SteamWeb.TokenSecure;
                     for (var i = 0; i < 2; i++)
-                    {
-                        SteamGuardAccount.Session.SteamLogin = SteamWeb.Token;
-                        SteamGuardAccount.Session.SteamLoginSecure = SteamWeb.TokenSecure;
+                    {                        
                         try
                         {
                             foreach (var confirmation in SteamGuardAccount.FetchConfirmations())
@@ -755,9 +755,13 @@ namespace SteamBot
                         }
                         SteamGuardAccount.RefreshSession();
                         CheckCookies();
-                    }                                     
+                    }
 
-                    if (!confirmed)
+                    if (confirmed)
+                    {
+                        GetUserHandler(e.TradeOffer.OtherSteamId).OnTradeOfferConfirmed(e.TradeOffer);
+                    }
+                    else
                     {
                         GetUserHandler(e.TradeOffer.OtherSteamId).OnTradeOfferFailedConfirmation(e.TradeOffer);
                     }
