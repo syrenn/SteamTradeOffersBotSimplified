@@ -58,21 +58,26 @@ namespace SteamAPI.TradeOffers
         /// Accepts a pending trade offer.
         /// </summary>
         /// <param name="tradeOfferId">The ID of the trade offer</param>
+        /// <param name="tradeId">The trade ID of the completed trade</param>
         /// <exception cref="TradeOfferSteamException">Thrown if and only if Steam returns a response with an error message and error code.</exception>
         /// <returns>True if successful, false if not</returns>
-        public bool AcceptTrade(ulong tradeOfferId)
+        public bool AcceptTrade(ulong tradeOfferId, out ulong tradeId)
         {
+            tradeId = 0;
             var tradeOfferResponse = GetTradeOffer(tradeOfferId);
-            return tradeOfferResponse.Offer != null && AcceptTrade(tradeOfferResponse.Offer);
+            return tradeOfferResponse.Offer != null && AcceptTrade(tradeOfferResponse.Offer, out tradeId);
         }
+
         /// <summary>
         /// Accepts a pending trade offer
         /// </summary>
         /// <param name="tradeOffer">The trade offer object</param>
+        /// <param name="tradeId">The trade ID of the completed trade</param>
         /// <exception cref="TradeOfferSteamException">Thrown if and only if Steam returns a response with an error message and error code.</exception>
         /// <returns>True if successful, false if not</returns>
-        public bool AcceptTrade(TradeOffer tradeOffer)
+        public bool AcceptTrade(TradeOffer tradeOffer, out ulong tradeId)
         {
+            tradeId = 0;
             var tradeOfferId = tradeOffer.Id;
             var url = "https://steamcommunity.com/tradeoffer/" + tradeOfferId + "/accept";
             var referer = "http://steamcommunity.com/tradeoffer/" + tradeOfferId + "/";
@@ -84,22 +89,12 @@ namespace SteamAPI.TradeOffers
                 {"partner", tradeOffer.OtherSteamId.ToString()}
             };
             var response = RetryWebRequest(_steamWeb, url, "POST", data, true, referer);
-            if (!string.IsNullOrEmpty(response))
-            {
-                try
-                {
-                    // use try-catch to check if this property is available
-                    dynamic json = JsonConvert.DeserializeObject(response);
-                    if (json.strError != null) throw new TradeOfferSteamException(json.strError);
-                    var id = json.tradeid;
-                    return true;
-                }
-                catch
-                {
-                    // ignored
-                }
-            }
-            return false;
+            if (string.IsNullOrEmpty(response)) return false;
+            dynamic json = JsonConvert.DeserializeObject(response);
+            if (json.strError != null) throw new TradeOfferSteamException(json.strError);
+            if (json.tradeid == null) return false;
+            tradeId = Convert.ToUInt64(json.tradeid);
+            return true;
         }
 
         /// <summary>
@@ -124,18 +119,9 @@ namespace SteamAPI.TradeOffers
             const string referer = "http://steamcommunity.com/";
             var data = new NameValueCollection {{"sessionid", _steamWeb.SessionId}, {"serverid", "1"}};
             var response = RetryWebRequest(_steamWeb, url, "POST", data, true, referer);
-            try
-            {
-                // use try-catch to check if this property is available
-                dynamic json = JsonConvert.DeserializeObject(response);
-                if (json.strError != null) throw new TradeOfferSteamException(json.strError);
-                var id = json.tradeofferid;
-            }
-            catch
-            {
-                return false;
-            }
-            return true;
+            dynamic json = JsonConvert.DeserializeObject(response);
+            if (json.strError != null) throw new TradeOfferSteamException(json.strError);
+            return json.tradeofferid != null;            
         }
 
         /// <summary>
@@ -160,18 +146,9 @@ namespace SteamAPI.TradeOffers
             const string referer = "http://steamcommunity.com/";
             var data = new NameValueCollection {{"sessionid", _steamWeb.SessionId}};
             var response = RetryWebRequest(_steamWeb, url, "POST", data, true, referer);
-            try
-            {
-                // use try-catch to check if this property is available
-                dynamic json = JsonConvert.DeserializeObject(response);
-                if (json.strError != null) throw new TradeOfferSteamException(json.strError);
-                var id = json.tradeofferid;
-            }
-            catch
-            {
-                return false;
-            }
-            return true;
+            dynamic json = JsonConvert.DeserializeObject(response);
+            if (json.strError != null) throw new TradeOfferSteamException(json.strError);
+            return json.tradeofferid != null;
         }
 
         /// <summary>
@@ -375,7 +352,7 @@ namespace SteamAPI.TradeOffers
         {
             lock (_ourPendingTradeOffersLock)
             {
-                OurPendingTradeOffers.Add(tradeOfferId);
+                if (!OurPendingTradeOffers.Contains(tradeOfferId)) OurPendingTradeOffers.Add(tradeOfferId);
             }            
         }
         private void RemovePendingTradeOfferFromList(ulong tradeOfferId)

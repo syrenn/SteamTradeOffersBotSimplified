@@ -24,7 +24,11 @@ namespace SteamBot
                 try
                 {
                     // see documentation for more info on when TradeOfferSteamException is thrown
-                    TradeOffers.AcceptTrade(tradeOffer.Id);
+                    ulong tradeId;
+                    if (TradeOffers.AcceptTrade(tradeOffer.Id, out tradeId))
+                    {
+                        // you can do something with tradeId if you need to
+                    }
                 }
                 catch (TradeOfferSteamException ex)
                 {
@@ -127,21 +131,20 @@ namespace SteamBot
                 }
                 else if (message == "test")
                 {
+                    // EXAMPLE: working with inventories
                     var tradeOffer = TradeOffers.CreateTrade(OtherSID);
                     var inventories = FetchInventories(Bot.SteamClient.SteamID);
-                    var csgoInventory = inventories.GetInventory(440, 2);
+                    var csgoInventory = inventories.GetInventory(730, 2);
                     foreach (var item in csgoInventory)
                     {
-                        tradeOffer.AddMyItem(440, 2, item.Id);
+                        tradeOffer.AddMyItem(730, 2, item.Id);
                         break;
                     }
                     try
                     {
-                        var tradeOfferIdWithToken = tradeOffer.SendTradeWithToken("message", "");
-                        if (tradeOfferIdWithToken > 0)
-                        {
-                            Log.Success("Trade offer sent: Offer ID " + tradeOfferIdWithToken);
-                        }
+                        // TradeOfferSteamException will be thrown when sending fails
+                        var tradeOfferIdWithToken = tradeOffer.SendTradeWithToken("message", "token");
+                        Log.Success("Trade offer sent: Offer ID " + tradeOfferIdWithToken);
                     }
                     catch (TradeOfferSteamException ex)
                     {
@@ -157,22 +160,27 @@ namespace SteamBot
                     var tradeOffer = TradeOffers.CreateTrade(OtherSID);
 
                     //tradeOffer.AddMyItem(0, 0, 0);
-
-                    var tradeOfferId = tradeOffer.SendTrade("message");
-                    if (tradeOfferId > 0)
-                    {
-                        Log.Success("Trade offer sent : Offer ID " + tradeOfferId);
-                    }
                     
+                    try
+                    {
+                        // sending trade offer without token (only for Steam friends)
+                        var tradeOfferId = tradeOffer.SendTrade("message");
+                        Log.Success("Trade offer sent: Offer ID " + tradeOfferId);
+                    }
+                    catch (TradeOfferSteamException ex)
+                    {
+                        if (ex.ErrorCode == 11 || ex.ErrorCode == 16)
+                        {
+                            // trade offer might have been sent even though there was an error
+                        }
+                    }                    
+
                     try
                     {
                         // sending trade offer with token
                         // "token" should be replaced with the actual token from the other user
                         var tradeOfferIdWithToken = tradeOffer.SendTradeWithToken("message", "token");
-                        if (tradeOfferIdWithToken > 0)
-                        {
-                            Log.Success("Trade offer sent: Offer ID " + tradeOfferIdWithToken);
-                        }
+                        Log.Success("Trade offer sent: Offer ID " + tradeOfferIdWithToken);
 
                     }
                     catch (TradeOfferSteamException ex)

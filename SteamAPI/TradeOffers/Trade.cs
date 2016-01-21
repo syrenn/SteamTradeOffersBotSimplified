@@ -32,8 +32,8 @@ namespace SteamAPI.TradeOffers
         /// </summary>
         /// <param name="message">Message to send with trade offer.</param>
         /// <param name="token">Trade offer token.</param>
-        /// <exception cref="TradeOfferSteamException">Thrown if and only if Steam returns a response with an error message and error code.</exception>
-        /// <returns>-1 if response fails to deserialize (general error), 0 if no tradeofferid exists (Steam error), or the Trade Offer ID of the newly created trade offer.</returns>
+        /// <exception cref="TradeOfferSteamException">Thrown when Steam gives an unexpected response.</exception>
+        /// <returns>ID of the newly created trade offer.</returns>
         public ulong SendTradeWithToken(string message, string token)
         {
             return SendTrade(message, token);
@@ -43,43 +43,44 @@ namespace SteamAPI.TradeOffers
         /// </summary>
         /// <param name="message">Message to send with trade offer.</param>
         /// <param name="token">Optional trade offer token.</param>
-        /// <exception cref="TradeOfferSteamException">Thrown if and only if Steam returns a response with an error message and error code.</exception>
-        /// <returns>-1 if response fails to deserialize (general error), 0 if no tradeofferid exists (Steam error), or the Trade Offer ID of the newly created trade offer.</returns>
+        /// <exception cref="TradeOfferSteamException">Thrown when Steam gives an unexpected response.</exception>
+        /// <returns>ID of the newly created trade offer.</returns>
         public ulong SendTrade(string message, string token = "")
         {
             const string url = "https://steamcommunity.com/tradeoffer/new/send";
             var referer = "https://steamcommunity.com/tradeoffer/new/?partner=" + _partnerId.AccountID;
             var data = new NameValueCollection
+            {
+                {"sessionid", _steamWeb.SessionId},
+                {"serverid", "1"},
+                {"partner", _partnerId.ConvertToUInt64().ToString()},
+                {"tradeoffermessage", message},
+                {"json_tradeoffer", JsonConvert.SerializeObject(tradeStatus)},
                 {
-                    {"sessionid", _steamWeb.SessionId},
-                    {"serverid", "1"},
-                    {"partner", _partnerId.ConvertToUInt64().ToString()},
-                    {"tradeoffermessage", message},
-                    {"json_tradeoffer", JsonConvert.SerializeObject(this.tradeStatus)},
-                    {
-                        "trade_offer_create_params",
-                        token == "" ? "{}" : "{\"trade_offer_access_token\":\"" + token + "\"}"
-                    }
-                };
+                    "trade_offer_create_params",
+                    token == "" ? "{}" : "{\"trade_offer_access_token\":\"" + token + "\"}"
+                }
+            };
+            dynamic jsonResponse;
             try
             {
                 var response = TradeOffers.RetryWebRequest(_steamWeb, url, "POST", data, true, referer);
-                dynamic jsonResponse = JsonConvert.DeserializeObject<dynamic>(response);
-                try
-                {
-                    if (jsonResponse.strError != null) throw new TradeOfferSteamException(jsonResponse.strError);
-                    ulong tradeOfferId = Convert.ToUInt64(jsonResponse.tradeofferid);
-                    _tradeOffers.AddPendingTradeOfferToList(tradeOfferId);
-                    return tradeOfferId;
-                }
-                catch
-                {
-                    return 0;
-                }
+                jsonResponse = JsonConvert.DeserializeObject<dynamic>(response);
             }
             catch
             {
-                return 0;
+                throw new TradeOfferSteamException();
+            }
+            if (jsonResponse.strError != null) throw new TradeOfferSteamException(jsonResponse.strError);
+            try
+            {
+                ulong tradeOfferId = Convert.ToUInt64(jsonResponse.tradeofferid);
+                _tradeOffers.AddPendingTradeOfferToList(tradeOfferId);
+                return tradeOfferId;
+            }
+            catch
+            {
+                throw new TradeOfferSteamException();
             }
         }
 

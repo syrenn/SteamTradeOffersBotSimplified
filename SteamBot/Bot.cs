@@ -726,15 +726,17 @@ namespace SteamBot
                 else
                 {
                     var confirmed = false;
-                    SteamGuardAccount.Session.SteamLogin = SteamWeb.Token;
-                    SteamGuardAccount.Session.SteamLoginSecure = SteamWeb.TokenSecure;
-                    try
+                    // try to confirm up to 2 times, refreshing session after first failure
+                    for (var i = 0; i < 2; i++)
                     {
-                        foreach (var confirmation in SteamGuardAccount.FetchConfirmations())
+                        SteamGuardAccount.Session.SteamLogin = SteamWeb.Token;
+                        SteamGuardAccount.Session.SteamLoginSecure = SteamWeb.TokenSecure;
+                        try
                         {
-                            var tradeOfferId = GetTradeOfferIdFromConfirmation(confirmation.ConfirmationID);
-                            if (tradeOfferId == e.TradeOffer.Id)
+                            foreach (var confirmation in SteamGuardAccount.FetchConfirmations())
                             {
+                                var tradeOfferId = GetTradeOfferIdFromConfirmation(confirmation.ConfirmationID);
+                                if (tradeOfferId != e.TradeOffer.Id) continue;
                                 if (SteamGuardAccount.AcceptConfirmation(confirmation))
                                 {
                                     Log.Debug("Confirmed {0}. (Confirmation ID #{1})", confirmation.ConfirmationDescription, confirmation.ConfirmationID);
@@ -743,11 +745,17 @@ namespace SteamBot
                                 break;
                             }
                         }
-                    }
-                    catch (SteamGuardAccount.WGTokenInvalidException)
-                    {
-                        Log.Error("Invalid session when trying to fetch trade confirmations.");
-                    }
+                        catch (SteamGuardAccount.WGTokenInvalidException)
+                        {
+                            Log.Error("Invalid session when trying to fetch trade confirmations.");
+                        }
+                        if (confirmed)
+                        {
+                            break;
+                        }
+                        SteamGuardAccount.RefreshSession();
+                        CheckCookies();
+                    }                                     
 
                     if (!confirmed)
                     {
