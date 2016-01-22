@@ -2,10 +2,29 @@
 
 **SteamTradeOffersBot** is a fork of [SteamBot](https://github.com/Jessecar96/SteamBot/), with an easy-to-use Trade Offers library and a true generic inventory interface, written by waylaidwanderer. All code related to live trading have been removed for simplicity. The bot is publicly available under the MIT License. Check out [LICENSE] for more details.
 
+**SteamTradeOffersBot** offers many callbacks for trade offer events, none of which are included in **SteamBot** with the exception of receiving a new trade offer.
+
+* `OnTradeOfferChecked`
+* `OnTradeOfferReceived`
+* `OnTradeOfferAccepted`
+* `OnTradeOfferDeclined`
+* `OnTradeOfferCanceled`
+* `OnTradeOfferInvalid`
+* `OnTradeOfferInEscrow`
+* `OnTradeOfferConfirmed`
+* `OnTradeOfferFailedConfirmation`
+* `OnTradeOfferNoData`
+
+**SteamTradeOffersBot** also allows retrieving data from `/inventory/json/{appid}/{contextid}` (aka generic inventories), meaning that it's easy to code a bot to handle different games.
+
+To see examples on how to use the above callbacks and access inventories, check out [`TradeOfferUserHandler.cs`](https://github.com/waylaidwanderer/SteamTradeOffersBot/blob/SteamTradeOffersBot/SteamBot/TradeOfferUserHandler.cs).
+
+## Getting Started
+
 There are several things you must do in order to get SteamBot working:
 
 1. Clone the repo.
-2. Fetch submodules.
+2. Fetch submodules (you can do #1 and #2 in one step with `git clone --recursive git://github.com/foo/bar.git`).
 3. Compile the bot (update/reinstall nuget packages if necessary).
 4. Configure the bot (username, password, etc.).
 5. *Optionally*, customize the bot by changing the source code.
