@@ -71,7 +71,7 @@ namespace SteamAPI.TradeOffers
             {
                 throw new TradeOfferSteamException();
             }
-            if (jsonResponse.strError != null) throw new TradeOfferSteamException(jsonResponse.strError);
+            if (jsonResponse.strError != null) throw new TradeOfferSteamException(Convert.ToString(jsonResponse.strError));
             try
             {
                 ulong tradeOfferId = Convert.ToUInt64(jsonResponse.tradeofferid);

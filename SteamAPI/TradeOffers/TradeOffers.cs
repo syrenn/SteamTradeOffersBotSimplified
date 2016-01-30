@@ -91,7 +91,7 @@ namespace SteamAPI.TradeOffers
             var response = RetryWebRequest(_steamWeb, url, "POST", data, true, referer);
             if (string.IsNullOrEmpty(response)) return false;
             dynamic json = JsonConvert.DeserializeObject(response);
-            if (json.strError != null) throw new TradeOfferSteamException(json.strError);
+            if (json.strError != null) throw new TradeOfferSteamException(Convert.ToString(json.strError));
             if (json.tradeid == null) return false;
             tradeId = Convert.ToUInt64(json.tradeid);
             return true;
@@ -120,7 +120,7 @@ namespace SteamAPI.TradeOffers
             var data = new NameValueCollection {{"sessionid", _steamWeb.SessionId}, {"serverid", "1"}};
             var response = RetryWebRequest(_steamWeb, url, "POST", data, true, referer);
             dynamic json = JsonConvert.DeserializeObject(response);
-            if (json.strError != null) throw new TradeOfferSteamException(json.strError);
+            if (json.strError != null) throw new TradeOfferSteamException(Convert.ToString(json.strError));
             return json.tradeofferid != null;            
         }
 
@@ -147,7 +147,7 @@ namespace SteamAPI.TradeOffers
             var data = new NameValueCollection {{"sessionid", _steamWeb.SessionId}};
             var response = RetryWebRequest(_steamWeb, url, "POST", data, true, referer);
             dynamic json = JsonConvert.DeserializeObject(response);
-            if (json.strError != null) throw new TradeOfferSteamException(json.strError);
+            if (json.strError != null) throw new TradeOfferSteamException(Convert.ToString(json.strError));
             return json.tradeofferid != null;
         }
 
