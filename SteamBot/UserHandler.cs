@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.AccessControl;
 using System.Threading;
@@ -71,9 +72,9 @@ namespace SteamBot
             get { return Bot.Admins.Contains(OtherSID); }
         }
 
-        public GenericInventory FetchInventories(SteamID steamId)
+        public GenericInventory FetchInventories(SteamID steamId, List<int> appIdsToFetch = null)
         {
-            return GenericInventory.FetchInventories(steamId, Bot.SteamClient.SteamID, Bot.SteamWeb);
+            return GenericInventory.FetchInventories(steamId, Bot.SteamWeb, appIdsToFetch);
         }
 
         public abstract void OnTradeOfferChecked(TradeOffer tradeOffer);

@@ -138,10 +138,14 @@ namespace SteamBot
                 {
                     // EXAMPLE: working with inventories
                     var tradeOffer = TradeOffers.CreateTrade(OtherSID);
-                    var inventories = FetchInventories(Bot.SteamClient.SteamID);
+                    // second parameter is optional and tells the bot to only fetch the CSGO inventory (730)
+                    var inventories = FetchInventories(Bot.SteamClient.SteamID, new List<int> { 730 });
                     var csgoInventory = inventories.GetInventory(730, 2);
-                    foreach (var item in csgoInventory)
+                    foreach (var item in csgoInventory.Items)
                     {
+                        // if you need info about the item, such as name, etc, use GetItemDescription
+                        var description = csgoInventory.GetItemDescription(730, 2, item.Id, false);
+                        Log.Info("This item is: {0}.", description.Name);
                         tradeOffer.AddMyItem(730, 2, item.Id);
                         break;
                     }
@@ -155,7 +159,7 @@ namespace SteamBot
                     {
                         if (ex.ErrorCode == 11 || ex.ErrorCode == 16)
                         {
-                            // trade offer might have been sent even though there was an error
+                            // trade offer might have been sent even though there was an error                            
                         }
                     }                    
                 }
