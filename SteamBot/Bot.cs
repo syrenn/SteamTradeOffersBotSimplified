@@ -735,7 +735,7 @@ namespace SteamBot
                         {
                             foreach (var confirmation in SteamGuardAccount.FetchConfirmations())
                             {
-                                var tradeOfferId = GetTradeOfferIdFromConfirmation(confirmation.ConfirmationID);
+                                var tradeOfferId = (ulong)SteamGuardAccount.GetConfirmationTradeOfferID(confirmation);
                                 if (tradeOfferId != e.TradeOffer.Id) continue;
                                 if (SteamGuardAccount.AcceptConfirmation(confirmation))
                                 {
@@ -957,51 +957,6 @@ namespace SteamBot
         {
             public TradeOfferEscrowDurationParseException() : base() { }
             public TradeOfferEscrowDurationParseException(string message) : base(message) { }
-        }
-
-        public ulong GetTradeOfferIdFromConfirmation(string confId)
-        {
-            try
-            {
-                string url = GenerateConfirmationOfferIdURL(confId);
-
-                CookieContainer cookies = new CookieContainer();
-                SteamGuardAccount.Session.AddCookies(cookies);
-
-                string response = SteamAuth.SteamWeb.Request(url, "GET", null, cookies);
-                var offerResponse = JsonConvert.DeserializeObject<ConfirmationDetailsResponse>(response);
-
-                Regex offerIdRegex = new Regex("id=\"tradeofferid_([0-9]+)\"");
-
-                //Console.WriteLine(offerIdRegex.IsMatch(offerResponse.Response.Html));
-                if (offerResponse == null || !offerResponse.Success || !offerIdRegex.IsMatch(offerResponse.Html))
-                    throw new SteamGuardAccount.WGTokenInvalidException();
-
-                MatchCollection OfferIdMatch = offerIdRegex.Matches(offerResponse.Html);
-
-                return Convert.ToUInt64(OfferIdMatch[0].Groups[1].Value);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex.Message);
-                return 0;
-            }
-        }
-
-        public string GenerateConfirmationOfferIdURL(string confId, string tag = "details")
-        {
-            string endpoint = APIEndpoints.COMMUNITY_BASE + "/mobileconf/details/" + confId + "?";
-            string queryString = SteamGuardAccount.GenerateConfirmationQueryParams(tag);
-            return endpoint + queryString;
-        }
-
-        private class ConfirmationDetailsResponse
-        {
-            [JsonProperty("success")]
-            public bool Success { get; set; }
-
-            [JsonProperty("html")]
-            public string Html;
         }
 
         #region Background Worker Methods
