@@ -92,16 +92,29 @@ namespace SteamAPI
             return new GenericInventory(steamId, steamWeb, appIdsToFetch);
         }  
 
-        public enum AppID
+        public enum AppId
         {
             TF2 = 440,
             Dota2 = 570,
             Portal2 = 620,
             CSGO = 730,
             SpiralKnights = 99900,
-            Steam = 753,
-            H1Z1 = 295110
-        }        
+            H1Z1 = 295110,
+            Steam = 753          
+        }
+
+        public enum ContextId
+        {
+            TF2 = 2,
+            Dota2 = 2,
+            Portal2 = 2,
+            CSGO = 2,
+            H1Z1 = 1,
+            SteamGifts = 1,
+            SteamCoupons = 3,
+            SteamCommunity = 6,
+            SteamItemRewards = 7           
+        }
 
         /// <summary>
         /// Use this to iterate through items in the inventory.
