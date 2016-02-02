@@ -8,6 +8,7 @@ using Newtonsoft.Json.Linq;
 using SteamKit2;
 using System.Text.RegularExpressions;
 using System.Net;
+using System.Threading;
 
 namespace SteamAPI
 {
@@ -22,6 +23,7 @@ namespace SteamAPI
         private const int WebRequestMaxRetries = 3;
         private const int WebRequestTimeBetweenRetriesMs = 1000;
         private SteamWeb _steamWeb;
+        private bool _loaded = false;
 
         /// <summary>
         /// Gets the content of all inventories listed in http://steamcommunity.com/profiles/STEAM_ID/inventory/
@@ -82,6 +84,7 @@ namespace SteamAPI
                     IsPrivate = true;
                 }
             });
+            new Thread(WaitAllTasks).Start();
         }
 
         public static GenericInventory FetchInventories(SteamID steamId, SteamWeb steamWeb, List<int> appIdsToFetch = null)
@@ -96,8 +99,9 @@ namespace SteamAPI
             Portal2 = 620,
             CSGO = 730,
             SpiralKnights = 99900,
-            Steam = 753
-        };
+            Steam = 753,
+            H1Z1 = 295110
+        }        
 
         /// <summary>
         /// Use this to iterate through items in the inventory.
@@ -170,15 +174,14 @@ namespace SteamAPI
 
         public delegate void InventoriesLoadedEventHandler(object sender, EventArgs e);
 
-        // An event that clients can use to be notified whenever the
-        // elements of the list change.
         public event InventoriesLoadedEventHandler InventoriesLoaded;
 
-        // Invoke the Changed event; called whenever list changes
         protected virtual void OnInventoriesLoaded(EventArgs e)
         {
+            if (_loaded) return;
+            _loaded = true;
             if (InventoriesLoaded != null)
-                InventoriesLoaded(this, e);
+                InventoriesLoaded(this, e);            
         }
 
         /// <summary>

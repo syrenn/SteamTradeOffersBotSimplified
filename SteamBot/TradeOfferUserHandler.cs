@@ -134,7 +134,7 @@ namespace SteamBot
                 {
                     Bot.SteamFriends.SendChatMessage(OtherSID, EChatEntryType.ChatMsg, Bot.SteamGuardAccount.GenerateSteamGuardCode());
                 }
-                else if (message == "test")
+                else if (message == "inventory example")
                 {
                     // EXAMPLE: working with inventories
                     var tradeOffer = TradeOffers.CreateTrade(OtherSID);
@@ -163,7 +163,7 @@ namespace SteamBot
                         }
                     }                    
                 }
-                else
+                else if (message == "trade offer example")
                 {
                     // EXAMPLE: creating a new trade offer
                     var tradeOffer = TradeOffers.CreateTrade(OtherSID);
@@ -199,7 +199,7 @@ namespace SteamBot
                             // trade offer might have been sent even though there was an error
                         }
                     }
-                }                
+                }       
             }
         }
 
