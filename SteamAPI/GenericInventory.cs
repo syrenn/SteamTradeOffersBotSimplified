@@ -533,6 +533,15 @@ namespace SteamAPI
                 [JsonProperty("type")]
                 public string Type { get; set; }
 
+                public bool IsCraftable
+                {
+                    get
+                    {
+                        return Descriptions.Any(description => description.Value == "( Not Usable in Crafting )");
+                    }
+                    set { IsCraftable = value; }
+                }
+
                 [JsonProperty("tradable")]
                 private short isTradable { get; set; }
                 public bool IsTradable { get { return isTradable == 1; } set { isTradable = Convert.ToInt16(value); } }

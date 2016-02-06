@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System.Linq;
+using Newtonsoft.Json;
 
 namespace SteamAPI.TradeOffers.Objects
 {
@@ -30,6 +31,15 @@ namespace SteamAPI.TradeOffers.Objects
 
         [JsonProperty("tradable")]
         public bool IsTradable { get; set; }
+
+        public bool IsCraftable
+        {
+            get
+            {
+                return Descriptions.Any(description => description.Value == "( Not Usable in Crafting )");
+            }
+            set { IsCraftable = value; }
+        }
 
         [JsonProperty("actions")]
         public ActionsData[] Actions { get; set; }
