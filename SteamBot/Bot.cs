@@ -730,16 +730,17 @@ namespace SteamBot
                     SteamGuardAccount.Session.SteamLogin = SteamWeb.Token;
                     SteamGuardAccount.Session.SteamLoginSecure = SteamWeb.TokenSecure;
                     for (var i = 0; i < 2; i++)
-                    {                        
+                    {
                         try
                         {
                             foreach (var confirmation in SteamGuardAccount.FetchConfirmations())
                             {
-                                var tradeOfferId = (ulong)SteamGuardAccount.GetConfirmationTradeOfferID(confirmation);
+                                var tradeOfferId = (ulong) SteamGuardAccount.GetConfirmationTradeOfferID(confirmation);
                                 if (tradeOfferId != e.TradeOffer.Id) continue;
                                 if (SteamGuardAccount.AcceptConfirmation(confirmation))
                                 {
-                                    Log.Debug("Confirmed {0}. (Confirmation ID #{1})", confirmation.ConfirmationDescription, confirmation.ConfirmationID);
+                                    Log.Debug("Confirmed {0}. (Confirmation ID #{1})",
+                                        confirmation.ConfirmationDescription, confirmation.ConfirmationID);
                                     confirmed = true;
                                 }
                                 break;
@@ -749,6 +750,10 @@ namespace SteamBot
                         {
                             Log.Error("Invalid session when trying to fetch trade confirmations.");
                         }
+                        catch
+                        {
+                            Log.Error("Unexpected response from Steam when trying to fetch trade confirmations.");
+                        }                 
                         if (confirmed)
                         {
                             break;
