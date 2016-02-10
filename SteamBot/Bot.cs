@@ -137,6 +137,10 @@ namespace SteamBot
                 Username = config.Username,
                 Password = config.Password
             };
+            if (config.UsesTwoFactorAuth)
+            {
+                logOnDetails.TwoFactorCode = GetMobileAuthCode();
+            }
             DisplayName  = config.DisplayName;
             ChatResponse = config.ChatResponse;
             TradeOfferRefreshRate = config.TradeOfferRefreshRate;
@@ -554,7 +558,7 @@ namespace SteamBot
             var authFile = Path.Combine("authfiles", String.Format("{0}.auth", logOnDetails.Username));
             if (File.Exists(authFile))
             {
-                SteamGuardAccount = Newtonsoft.Json.JsonConvert.DeserializeObject<SteamGuardAccount>(File.ReadAllText(authFile));                
+                SteamGuardAccount = JsonConvert.DeserializeObject<SteamGuardAccount>(File.ReadAllText(authFile));                
                 return SteamGuardAccount.GenerateSteamGuardCode();
             }
             return string.Empty;   
