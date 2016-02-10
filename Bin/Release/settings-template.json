@@ -1,24 +1,24 @@
 {
 "Admins":["234567"],
 "ApiKey":"Steam API Key goes here!",
-"mainLog": "syslog.log",
-"UseSeparateProcesses": "false",
-"AutoStartAllBots": "true",
+"mainLog":"syslog.log",
+"UseSeparateProcesses":"false",
+"AutoStartAllBots":"true",
 "Bots": [
         {
             "Username":"BOT USERNAME",
             "Password":"BOT PASSWORD",
             "UsesTwoFactorAuth":false,
             "ApiKey":"Bot specific apiKey",
-            "TradeOfferRefreshRate": 2000,
+            "TradeOfferRefreshRate":2000,
             "DisplayName":"TestBot",
             "ChatResponse":"Hi there bro",
-            "logFile": "TestBot.log",
-            "BotControlClass": "SteamBot.TradeOfferUserHandler",
+            "logFile":"TestBot.log",
+            "BotControlClass":"SteamBot.TradeOfferUserHandler",
             "DisplayNamePrefix":"[AutomatedBot] ",
             "ConsoleLogLevel":"Success",
             "FileLogLevel":"Info",
-            "AutoStart": "true"
+            "AutoStart":"true"
         }
     ]
 }
