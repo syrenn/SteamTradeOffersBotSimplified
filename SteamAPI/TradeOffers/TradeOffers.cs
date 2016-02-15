@@ -92,6 +92,8 @@ namespace SteamAPI.TradeOffers
             if (string.IsNullOrEmpty(response)) return false;
             dynamic json = JsonConvert.DeserializeObject(response);
             if (json.strError != null) throw new TradeOfferSteamException(Convert.ToString(json.strError));
+            if (json.needs_mobile_confirmation != null && Convert.ToBoolean(json.needs_mobile_confirmation)) return true;
+            if (json.needs_email_confirmation != null && Convert.ToBoolean(json.needs_email_confirmation)) return true;
             if (json.tradeid == null) return false;
             tradeId = Convert.ToUInt64(json.tradeid);
             return true;
