@@ -21,13 +21,12 @@ To see examples on how to use the above callbacks and access inventories, check 
 
 ## Getting Started
 
-There are several things you must do in order to get SteamBot working:
+There are several things you must do in order to get SteamTradeOffersBot working:
 
 1. Clone the repo.
-2. Fetch submodules (you can do #1 and #2 in one step with `git clone --recursive git://github.com/foo/bar.git`).
-3. Compile the bot (update/reinstall nuget packages if necessary).
-4. Configure the bot (username, password, etc.).
-5. *Optionally*, customize the bot by changing the source code.
+2. Compile the bot (update/reinstall nuget packages if necessary).
+3. Configure the bot (username, password, etc.).
+4. *Optionally*, customize the bot by changing the source code.
 
 ## Getting the Source
 
