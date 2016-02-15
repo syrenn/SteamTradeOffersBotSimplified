@@ -47,6 +47,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\protobuf-net.2.0.0.668\lib\net40\protobuf-net.dll</HintPath>
     </Reference>
+    <Reference Include="SteamAuth, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SteamAuth.1.0.1\lib\net45\SteamAuth.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="SteamKit2, Version=1.6.2.38878, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\SteamKit2.1.6.2\lib\net40\SteamKit2.dll</HintPath>
@@ -97,10 +101,6 @@
     <ProjectReference Include="..\SteamAPI\SteamAPI.csproj">
       <Project>{6cec0333-81eb-40ee-85d1-941363626fc7}</Project>
       <Name>SteamAPI</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SteamAuth\SteamAuth\SteamAuth.csproj">
-      <Project>{5ad0934e-f6c4-4ae5-83af-c788313b2a87}</Project>
-      <Name>SteamAuth</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
