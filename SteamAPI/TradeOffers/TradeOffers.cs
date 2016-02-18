@@ -88,15 +88,22 @@ namespace SteamAPI.TradeOffers
                 {"tradeofferid", tradeOfferId.ToString()},
                 {"partner", tradeOffer.OtherSteamId.ToString()}
             };
-            var response = RetryWebRequest(_steamWeb, url, "POST", data, true, referer);
-            if (string.IsNullOrEmpty(response)) return false;
-            dynamic json = JsonConvert.DeserializeObject(response);
-            if (json.strError != null) throw new TradeOfferSteamException(Convert.ToString(json.strError));
-            if (json.needs_mobile_confirmation != null && Convert.ToBoolean(json.needs_mobile_confirmation)) return true;
-            if (json.needs_email_confirmation != null && Convert.ToBoolean(json.needs_email_confirmation)) return true;
-            if (json.tradeid == null) return false;
-            tradeId = Convert.ToUInt64(json.tradeid);
-            return true;
+            try
+            {
+                var response = RetryWebRequest(_steamWeb, url, "POST", data, true, referer);
+                if (string.IsNullOrEmpty(response)) return false;
+                dynamic json = JsonConvert.DeserializeObject(response);
+                if (json.strError != null) throw new TradeOfferSteamException(Convert.ToString(json.strError));
+                if (json.needs_mobile_confirmation != null && Convert.ToBoolean(json.needs_mobile_confirmation)) return true;
+                if (json.needs_email_confirmation != null && Convert.ToBoolean(json.needs_email_confirmation)) return true;
+                if (json.tradeid == null) return false;
+                tradeId = Convert.ToUInt64(json.tradeid);
+                return true;
+            }
+            catch (JsonReaderException)
+            {
+                return false;
+            }            
         }
 
         /// <summary>
@@ -120,10 +127,17 @@ namespace SteamAPI.TradeOffers
             var url = "https://steamcommunity.com/tradeoffer/" + tradeOfferId + "/decline";
             const string referer = "http://steamcommunity.com/";
             var data = new NameValueCollection {{"sessionid", _steamWeb.SessionId}, {"serverid", "1"}};
-            var response = RetryWebRequest(_steamWeb, url, "POST", data, true, referer);
-            dynamic json = JsonConvert.DeserializeObject(response);
-            if (json.strError != null) throw new TradeOfferSteamException(Convert.ToString(json.strError));
-            return json.tradeofferid != null;            
+            try
+            {
+                var response = RetryWebRequest(_steamWeb, url, "POST", data, true, referer);
+                dynamic json = JsonConvert.DeserializeObject(response);
+                if (json.strError != null) throw new TradeOfferSteamException(Convert.ToString(json.strError));
+                return json.tradeofferid != null;
+            }
+            catch (JsonReaderException)
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -180,11 +194,18 @@ namespace SteamAPI.TradeOffers
         {
             var url = string.Format("https://api.steampowered.com/IEconService/GetTradeOffer/v1/?key={0}&tradeofferid={1}&language={2}", _accountApiKey, tradeOfferId, "en_us");
             var response = RetryWebRequest(_steamWeb, url, "GET", null, false, "http://steamcommunity.com");
-            var result = JsonConvert.DeserializeObject<GetTradeOffer>(response);
-            if (result.Response != null)
+            try
             {
-                return result.Response;
+                var result = JsonConvert.DeserializeObject<GetTradeOffer>(response);
+                if (result.Response != null)
+                {
+                    return result.Response;
+                }
             }
+            catch (JsonReaderException)
+            {
+                
+            }            
             return null;
         }
 
@@ -206,25 +227,32 @@ namespace SteamAPI.TradeOffers
                 url += "&active_only=0";
             }
             var response = RetryWebRequest(_steamWeb, url, "GET", null, false, "http://steamcommunity.com");
-            var json = JsonConvert.DeserializeObject<dynamic>(response);
-            var sentTradeOffers = json.response.trade_offers_sent;
-            if (sentTradeOffers != null)
+            try
             {
-                foreach (var tradeOffer in sentTradeOffers)
+                var json = JsonConvert.DeserializeObject<dynamic>(response);
+                var sentTradeOffers = json.response.trade_offers_sent;
+                if (sentTradeOffers != null)
                 {
-                    TradeOffer tempTrade = JsonConvert.DeserializeObject<TradeOffer>(Convert.ToString(tradeOffer));
-                    temp.Add(tempTrade);
+                    foreach (var tradeOffer in sentTradeOffers)
+                    {
+                        TradeOffer tempTrade = JsonConvert.DeserializeObject<TradeOffer>(Convert.ToString(tradeOffer));
+                        temp.Add(tempTrade);
+                    }
+                }
+                var receivedTradeOffers = json.response.trade_offers_received;
+                if (receivedTradeOffers != null)
+                {
+                    foreach (var tradeOffer in receivedTradeOffers)
+                    {
+                        TradeOffer tempTrade = JsonConvert.DeserializeObject<TradeOffer>(Convert.ToString(tradeOffer));
+                        temp.Add(tempTrade);
+                    }
                 }
             }
-            var receivedTradeOffers = json.response.trade_offers_received;
-            if (receivedTradeOffers != null)
+            catch (JsonReaderException)
             {
-                foreach (var tradeOffer in receivedTradeOffers)
-                {
-                    TradeOffer tempTrade = JsonConvert.DeserializeObject<TradeOffer>(Convert.ToString(tradeOffer));
-                    temp.Add(tempTrade);
-                }
-            }
+                
+            }            
             return temp;
         }
 
