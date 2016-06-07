@@ -988,7 +988,7 @@ namespace SteamBot
                 //StartBot();
             }
 
-            Log.Dispose();
+            DisposeLog();
         }
 
         private void BackgroundWorkerOnDoWork(object sender, DoWorkEventArgs doWorkEventArgs)
