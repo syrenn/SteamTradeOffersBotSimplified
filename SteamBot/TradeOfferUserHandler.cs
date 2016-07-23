@@ -80,7 +80,7 @@ namespace SteamBot
 
         public override void OnTradeOfferInEscrow(TradeOffer tradeOffer)
         {
-            Log.Warn("Trade offer #{0} is in escrow until {2}.", tradeOffer.Id, tradeOffer.EscrowEndDate);
+            Log.Warn("Trade offer #{0} is in escrow until {1}.", tradeOffer.Id, tradeOffer.EscrowEndDate);
         }
 
         public override void OnTradeOfferConfirmed(TradeOffer tradeOffer)
